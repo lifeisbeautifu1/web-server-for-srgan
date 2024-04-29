@@ -19,6 +19,11 @@ ALLOWED_EXTENSIONS = { 'png' }
 MODEL_CHECKPOINT = './weights/SRGAN.pth'
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+model = Generator(n_blocks=16, scaling_factor=4)
+model.load_state_dict(torch.load(MODEL_CHECKPOINT, map_location=device))
+model.to(device)
+model.eval()
+
 # constants
 rgb_weights = torch.FloatTensor([65.481, 128.553, 24.966]).to(device)
 imagenet_mean = torch.FloatTensor([0.485, 0.456, 0.406]).unsqueeze(1).unsqueeze(2)
@@ -92,11 +97,6 @@ def center_crop(image, crop_size):
 
 
 def upscale(image):
-    model = Generator(n_blocks=16, scaling_factor=4)
-    model.load_state_dict(torch.load(MODEL_CHECKPOINT, map_location=device))
-    model.to(device)
-    model.eval()
-    
     sr_img = model(convert_image(image, source='pil', target='imagenet-norm').unsqueeze(0).to(device))
     sr_img = torch.clamp(sr_img.squeeze(0).cpu().detach(), -1, 1)
     sr_img = convert_image(sr_img, source='[-1, 1]', target='pil')

@@ -6,7 +6,7 @@ from utils import allowed_file, serve_pil_image, upscale
 app = Flask(__name__)
 CORS(app)
 
-@app.route('/upload', methods = ['POST'])
+@app.route('/api/upload', methods = ['POST'])
 def upload_file():
     if 'photo' not in request.files:
         return 'Forgot to send photo?', 400
