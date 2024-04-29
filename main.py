@@ -1,11 +1,11 @@
 from flask import Flask, request, send_file
-from flask_cors import CORS
+from flask_cors import cross_origin
 from PIL import Image
 from utils import allowed_file, serve_pil_image, upscale
 
 app = Flask(__name__)
-CORS(app)
 
+# @cross_origin(origins=['http://localhost:5173'])
 @app.route('/api/upload', methods = ['POST'])
 def upload_file():
     if 'photo' not in request.files:

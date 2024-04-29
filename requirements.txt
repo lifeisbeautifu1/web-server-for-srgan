@@ -1,8 +1,8 @@
-torch
-torchvision
+gunicorn
 numpy
 pillow
-opencv-python
+opencv-python-headless
 flask
 flask_cors
-gunicorn
+torch
+torchvision
