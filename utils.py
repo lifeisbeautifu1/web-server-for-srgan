@@ -3,19 +3,22 @@ import math
 import os
 import json
 import random
-
-import numpy as np
 import torch
+import numpy as np
 import torch.backends.cudnn as cudnn
 import torchvision.transforms as transforms
 import torchvision.transforms.functional as FT
-
-import io
-import imageio
-from PIL import Image
 import cv2
 
+from flask import send_file
+from io import BytesIO
+from PIL import Image
+from models import Generator
+
+ALLOWED_EXTENSIONS = { 'png' }
+MODEL_CHECKPOINT = './weights/SRGAN.pth'
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 # constants
 rgb_weights = torch.FloatTensor([65.481, 128.553, 24.966]).to(device)
 imagenet_mean = torch.FloatTensor([0.485, 0.456, 0.406]).unsqueeze(1).unsqueeze(2)
@@ -86,3 +89,25 @@ def center_crop(image, crop_size):
 
     random_cropped_img = image.crop((left, top, right, bottom))
     return random_cropped_img
+
+
+def upscale(image):
+    model = Generator(n_blocks=16, scaling_factor=4)
+    model.load_state_dict(torch.load(MODEL_CHECKPOINT, map_location=device))
+    model.to(device)
+    model.eval()
+    
+    sr_img = model(convert_image(image, source='pil', target='imagenet-norm').unsqueeze(0).to(device))
+    sr_img = torch.clamp(sr_img.squeeze(0).cpu().detach(), -1, 1)
+    sr_img = convert_image(sr_img, source='[-1, 1]', target='pil')
+
+    return sr_img
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.')[1].lower() in ALLOWED_EXTENSIONS
+
+def serve_pil_image(pil_img):
+    img_io = BytesIO()
+    pil_img.save(img_io, 'png')
+    img_io.seek(0)
+    return send_file(img_io, mimetype='image/png')
