@@ -5,8 +5,8 @@ from utils import allowed_file, serve_pil_image, upscale
 
 app = Flask(__name__)
 
-# @cross_origin(origins=['http://localhost:5173'])
 @app.route('/api/upload', methods = ['POST'])
+@cross_origin(origins=['https://super-resolution-with-srgan.netlify.app'])
 def upload_file():
     if 'photo' not in request.files:
         return 'Forgot to send photo?', 400
