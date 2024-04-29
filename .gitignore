@@ -1,0 +1,6 @@
+bin
+include
+lib
+share
+pyenv.cfg
+__pycache__
