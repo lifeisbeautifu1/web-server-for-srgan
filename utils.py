@@ -14,7 +14,7 @@ import requests
 from flask import send_file
 from io import BytesIO
 from PIL import Image
-from models import Generator
+from models import Generator, FBCNN
 
 ALLOWED_EXTENSIONS = { 'png', 'jpg', 'jpeg' }
 PREPROCESSING_EXTENSIONS = { 'jpg', 'jpeg' }
@@ -32,6 +32,7 @@ model.eval()
 url = 'https://github.com/jiaxi-jiang/FBCNN/releases/download/v1.0/fbcnn_color.pth'
 r = requests.get(url, allow_redirects=True)
 open(FBCNN_CHECKPOINT, 'wb').write(r.content)
+print('downloaded weights')
 nc = [64, 128, 256, 512]
 nb = 4
 fbcnn = FBCNN(in_nc=3, out_nc=3, nc=nc, nb=nb, act_mode='R')
