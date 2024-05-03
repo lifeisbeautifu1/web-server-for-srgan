@@ -3,8 +3,6 @@ from flask_cors import cross_origin
 from PIL import Image
 from utils import allowed_file, serve_pil_image, upscale, need_preprocessing, process_jpg
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 app = Flask(__name__)
 
 @cross_origin(origins=['https://super-resolution-with-srgan.netlify.app'])
