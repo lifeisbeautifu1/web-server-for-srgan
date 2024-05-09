@@ -9,18 +9,15 @@ import torch.backends.cudnn as cudnn
 import torchvision.transforms as transforms
 import torchvision.transforms.functional as FT
 import cv2
-import requests
 
 from flask import send_file
 from io import BytesIO
 from PIL import Image
-from models import Generator, FBCNN
+from models import Generator
 
-ALLOWED_EXTENSIONS = { 'png', 'jpg', 'jpeg' }
-PREPROCESSING_EXTENSIONS = { 'jpg', 'jpeg' }
+ALLOWED_EXTENSIONS = { 'png' }
 
 MODEL_CHECKPOINT = './weights/SRGAN.pth'
-FBCNN_CHECKPOINT = './weights/fbcnn_color.pth'
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -29,50 +26,12 @@ model.load_state_dict(torch.load(MODEL_CHECKPOINT, map_location=device))
 model.to(device)
 model.eval()
 
-url = 'https://github.com/jiaxi-jiang/FBCNN/releases/download/v1.0/fbcnn_color.pth'
-r = requests.get(url, allow_redirects=True)
-open(FBCNN_CHECKPOINT, 'wb').write(r.content)
-nc = [64, 128, 256, 512]
-nb = 4
-fbcnn = FBCNN(in_nc=3, out_nc=3, nc=nc, nb=nb, act_mode='R')
-fbcnn.load_state_dict(torch.load(FBCNN_CHECKPOINT, map_location=device), strict=True)
-fbcnn.to(device)
-fbcnn.eval()
-for k, v in fbcnn.named_parameters():
-  v.requires_grad = False
-
 # constants
 rgb_weights = torch.FloatTensor([65.481, 128.553, 24.966]).to(device)
 imagenet_mean = torch.FloatTensor([0.485, 0.456, 0.406]).unsqueeze(1).unsqueeze(2)
 imagenet_std = torch.FloatTensor([0.229, 0.224, 0.225]).unsqueeze(1).unsqueeze(2)
 imagenet_mean_cuda = torch.FloatTensor([0.485, 0.456, 0.406]).to(device).unsqueeze(0).unsqueeze(2).unsqueeze(3)
 imagenet_std_cuda = torch.FloatTensor([0.229, 0.224, 0.225]).to(device).unsqueeze(0).unsqueeze(2).unsqueeze(3)
-
-# convert uint to 4-dimensional torch tensor
-def uint2tensor4(img):
-    if img.ndim == 2:
-        img = np.expand_dims(img, axis=2)
-    return torch.from_numpy(np.ascontiguousarray(img)).permute(2, 0, 1).float().div(255.0).unsqueeze(0)
-
-# convert torch tensor to single
-def tensor2single(img):
-    img = img.data.squeeze().float().cpu().numpy()
-
-    if img.ndim == 3:
-        img = np.transpose(img, (1, 2, 0))
-
-    return img
-
-def single2uint(img):
-    return np.uint8((img.clip(0, 1) * 255.0).round())
-
-def process_jpg(img):
-    image = uint2tensor4(np.array(img))
-    image = image.to(device)
-    result, QF = fbcnn(image)
-    result = tensor2single(result)
-    return single2uint(result)
-
 
 def convert_image(img, source, target):
     """
@@ -148,9 +107,6 @@ def upscale(image):
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.')[1].lower() in ALLOWED_EXTENSIONS
-
-def need_preprocessing(filename):
-    return '.' in filename and filename.rsplit('.')[1].lower() in PREPROCESSING_EXTENSIONS
 
 def serve_pil_image(pil_img):
     img_io = BytesIO()

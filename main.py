@@ -1,7 +1,7 @@
 from flask import Flask, request, send_file
 from flask_cors import cross_origin
 from PIL import Image
-from utils import allowed_file, serve_pil_image, upscale, need_preprocessing, process_jpg
+from utils import allowed_file, serve_pil_image, upscale
 
 app = Flask(__name__)
 
@@ -19,10 +19,6 @@ def upload_file():
     if photo and allowed_file(photo.filename):
         # Do the magic.
         low_res_image = Image.open(photo)
-
-        if need_preprocessing(photo.filename):
-            low_res_image = process_jpg(low_res_image)
-
         high_res_image = upscale(low_res_image)
         return serve_pil_image(high_res_image)
     else:
