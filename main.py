@@ -5,8 +5,8 @@ from utils import allowed_file, serve_pil_image, upscale
 
 app = Flask(__name__)
 
-@cross_origin(origins=['https://super-resolution-with-srgan.netlify.app'])
 @app.route('/api/upload', methods = ['POST'])
+@cross_origin(origins=['https://super-resolution-with-srgan.netlify.app'])
 def upload_file():
     if 'photo' not in request.files:
         return 'Forgot to send photo?', 400
@@ -22,7 +22,7 @@ def upload_file():
         high_res_image = upscale(low_res_image)
         return serve_pil_image(high_res_image)
     else:
-        return "Only png's and jpg's are allowed", 400
+        return "Only png's are allowed", 400
 
 @app.route('/')
 def hello_world():
